@@ -111,6 +111,12 @@ def random_division_weighted() -> int:
     weights = [5, 10, 15, 20, 50]
     return random.choices(choices, weights=weights, k=1)[0]
 
+def random_reason_for_leaving_weighted() -> int:
+    """Return a random integer 1-8 with custom probabilities"""
+    choices = [1, 2, 3, 4, 5, 6, 7]
+    weights = [10, 5, 30, 10, 20, 5, 10]
+    return random.choices(choices, weights=weights, k=1)[0]
+
 # --- helpers --------------------------------------------------------------- #
 
 def random_dob() -> date:
@@ -129,16 +135,22 @@ for i in range(N_RECORDS):
     gender = random.choices(["Male", "Female"], weights=[0.6, 0.4], k=1)[0]
     first  = random.choice(MALE_NAMES if gender == "Male" else FEMALE_NAMES)
     last   = random.choice(SURNAMES)
+    status = random.choices(["Permanent Role", "Growth Role"], weights=[0.7, 0.3], k=1)[0]
+    vacancy_type = random.choices(["Replacement", "New"], weights=[0.8, 0.2], k=1)[0]
+    rating = random.choices(["High On Track", "On Track", "Under", ""], weights=[3,6,2,10], k=1)[0]
+    workforce_planning_a = random.choices(["Active", "Inactive", "Temporary"], weights=[6,1,4], k=1)[0]
     grade_key = random_grade_weighted()
     department_key = random_department_weighted()
     division_key = random_division_weighted()
+    reason_for_leaving_key = random_reason_for_leaving_weighted()
     fte = random.choices([0.5, 1], weights=[0.1, 0.9], k=1)[0]
     dob_date = random_dob() 
     join_date = generate_join_date(dob_date)
     leave_date = generate_leave_date(join_date)
     dob_str    = dob_date.isoformat()
     rows.append(
-        [employee_id, first, last, gender, grade_key, department_key, division_key, fte,
+        [employee_id, first, last, gender, status, vacancy_type, rating, workforce_planning_a,
+         grade_key, department_key, division_key, reason_for_leaving_key, fte,
          dob_date.isoformat(), 
          join_date.isoformat(), 
          leave_date.isoformat() if leave_date else None
@@ -147,7 +159,8 @@ for i in range(N_RECORDS):
 # --- output CSV ------------------------------------------------------------ #
 
 file_path = "./outputs/employee.csv"
-column_names = ["EmployeeId", "First Name", "Last Name", "Gender", "Grade Key", "Department Key", "Division Key", "FTE", "Birth Date", "Join Date", "Leave Date"]
+column_names = ["EmployeeId", "First Name", "Last Name", "Gender", "Status", "Vacancy Type", "Rating", "Workforce Planning A", 
+                "Grade Key", "Department Key", "Division Key", "ReasonForLeaving Key", "FTE", "Birth Date", "Join Date", "Leave Date"]
 with open(file_path, "w", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)
     writer.writerow(column_names)
