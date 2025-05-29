@@ -97,11 +97,6 @@ def random_division_weighted_vec(n: int) -> list[int]:
     weights = [5, 10, 15, 20, 50]
     return random.choices(choices, weights=weights, k=n)
 
-def random_reason_for_leaving_weighted_vec(n: int) -> list[int]:
-    """Return a list of random reason-for-leaving keys (1-7) with custom weighted probabilities."""
-    choices = [1, 2, 3, 4, 5, 6, 7]
-    weights = [10, 5, 30, 10, 20, 5, 10]
-    return random.choices(choices, weights=weights, k=n)
 
 def random_dob_vec(n: int) -> list[date]:
     """Return a list of random dates of birth within bounds, sampled from a normal distribution."""
@@ -156,7 +151,6 @@ def generate_employee_df(n_records: int) -> pd.DataFrame:
     df["Grade Key"] = random_grade_weighted_vec(n_records)
     df["Department Key"] = random_department_weighted_vec(n_records)
     df["Division Key"] = random_division_weighted_vec(n_records)
-    df["ReasonForLeaving Key"] = random_reason_for_leaving_weighted_vec(n_records)
     df["FTE"] = np.random.choice([0.5, 1], size=n_records, p=[0.1, 0.9])
     dobs = random_dob_vec(n_records)
     df["Birth Date"] = [d.isoformat() for d in dobs]
@@ -164,6 +158,15 @@ def generate_employee_df(n_records: int) -> pd.DataFrame:
     df["Join Date"] = [d.isoformat() for d in join_dates]
     leave_dates = generate_leave_date_vec(join_dates)
     df["Leave Date"] = [d.isoformat() if d else None for d in leave_dates]
+    df["Reason For Leaving"] = np.where(
+        df["Leave Date"].isna(),
+        "",
+        np.random.choice(
+            ["Resignation", "Retirement", "End Of Contract", "Mutual Agreement", "Redundancy", "Unsatisfactory Probation", "Dismissal"],
+            size=n_records, p=[0.1, 0.05, 0.3, 0.1, 0.3, 0.05, 0.1]
+        )
+    )
+    
     df["Absence Rate"] = np.random.uniform(0.0, 0.1, size=n_records)
     return df
 
