@@ -71,7 +71,7 @@ STD_DAYS       = int(STD_YEARS * 365.25)          # convert to days
 DOB_MIN        = date(1960, 1, 1)
 DOB_MAX        = date(2003, 12, 31)
 
-today = date(2025, 5, 24)
+current_date = datetime.today().date()  
 
 # --- weighted random helpers (vectorized) ---------------------------------- #
 
@@ -116,9 +116,9 @@ def generate_join_date_vec(dobs: list[date]) -> list[date]:
     join_dates = []
     for dob in dobs:
         min_join = dob + relativedelta(years=21)
-        if min_join > today:
-            min_join = today
-        delta_days = (today - min_join).days
+        if min_join > current_date:
+            min_join = current_date
+        delta_days = (current_date - min_join).days
         join_date = min_join + timedelta(days=random.randint(0, delta_days))
         join_dates.append(join_date)
     return join_dates
@@ -130,7 +130,7 @@ def generate_leave_date_vec(join_dates: list[date]) -> list[date | None]:
         max_leave_date = join_date + relativedelta(years=25)
         delta_days = (max_leave_date - join_date).days
         leave_date = join_date + timedelta(days=random.randint(0, delta_days))
-        if leave_date > today + relativedelta(months=6):
+        if leave_date > current_date + relativedelta(months=6):
             leave_date = None
         leave_dates.append(leave_date)
     return leave_dates
@@ -160,9 +160,11 @@ def generate_employee_df(n_records: int) -> pd.DataFrame:
     df["Join Date"] = [d.isoformat() for d in join_dates]
     leave_dates = generate_leave_date_vec(join_dates)
     df["Leave Date"] = [d.isoformat() if d else None for d in leave_dates]
+    df["Absence Rate"] = np.random.uniform(0.0, 0.1, size=n_records)
     return df
 
 # --- output CSV ------------------------------------------------------------ #
+
 
 df = generate_employee_df(N_RECORDS)
 file_path = "./outputs/employee.csv"
@@ -173,3 +175,32 @@ print("Sample data generation complete.")
 
 # Display first 10 rows for user preview
 print(df.head(5))
+
+absence_records = []
+
+# Process each employee
+for _, row in df.iterrows():
+    join_date = row["Join Date"]
+    leave_date = row["Leave Date"] if pd.notnull(row["Leave Date"]) else current_date
+    absence_rate = row["Absence Rate"]
+    employee_id = row["EmployeeId"]
+
+    # Generate working days between join and leave date
+    working_days = pd.date_range(start=join_date, end=leave_date, freq='B')  # 'B' is business day freq
+
+    # Generate random values and filter by absence rate
+    random_vals = np.random.rand(len(working_days))
+    absent_days = working_days[random_vals < absence_rate]
+
+    # Append records to the list
+    absence_records.extend([(employee_id, date) for date in absent_days])
+
+# Create the absence DataFrame
+df_absence = pd.DataFrame(absence_records, columns=["EmployeeId", "Date"])
+
+# Example of saving the result
+df_absence.to_csv("./outputs/absence_data.csv", index=False)
+
+# Preview the result
+print("Absence data generated:")
+print(df_absence.head())
