@@ -146,11 +146,9 @@ def generate_employee_df(n_records: int) -> pd.DataFrame:
     df["Last Name"] = np.random.choice(SURNAMES, size=n_records)
     df["Status"] = np.random.choice(["Permanent Role", "Growth Role"], size=n_records, p=[0.7, 0.3])
     df["Vacancy Type"] = np.random.choice(["Replacement", "New"], size=n_records, p=[0.8, 0.2])
-    df["Rating"] = np.random.choice(["High On Track", "On Track", "Under", ""], size=n_records, p=[0.15, 0.3, 0.1, 0.45])
-    df["Workforce Planning A"] = np.random.choice(["Active", "Inactive", "Temporary"], size=n_records, p=[0.6, 0.1, 0.3])
     df["Grade Key"] = random_grade_weighted_vec(n_records)
     df["Department Key"] = random_department_weighted_vec(n_records)
-    df["Division Key"] = random_division_weighted_vec(n_records)
+    df["Workforce Planning A Key"] = random_division_weighted_vec(n_records)
     df["FTE"] = np.random.choice([0.5, 1], size=n_records, p=[0.1, 0.9])
     dobs = random_dob_vec(n_records)
     df["Birth Date"] = [d.isoformat() for d in dobs]
@@ -158,15 +156,22 @@ def generate_employee_df(n_records: int) -> pd.DataFrame:
     df["Join Date"] = [d.isoformat() for d in join_dates]
     leave_dates = generate_leave_date_vec(join_dates)
     df["Leave Date"] = [d.isoformat() if d else None for d in leave_dates]
-    df["Reason For Leaving"] = np.where(
-        df["Leave Date"].isna(),
-        "",
-        np.random.choice(
+    df["Reason For Leaving"] = np.random.choice(
             ["Resignation", "Retirement", "End Of Contract", "Mutual Agreement", "Redundancy", "Unsatisfactory Probation", "Dismissal"],
             size=n_records, p=[0.1, 0.05, 0.3, 0.1, 0.3, 0.05, 0.1]
         )
     )
-    
+    df["Rating How"] =  np.where(
+        pd.to_datetime(df["Leave Date"]) <= pd.Timestamp("2023-12-31"),
+        "-Not Applicable-",
+        np.random.choice(["On Track", "High", "Exceptional"], size=n_records, p=[0.7, 0.2, 0.1])
+    )
+    df["Rating What"] =  np.where(
+        pd.to_datetime(df["Leave Date"]) <= pd.Timestamp("2023-12-31"),
+        "-Not Applicable-",
+        np.random.choice(["On Track", "High", "Exceptional"], size=n_records, p=[0.7, 0.2, 0.1])
+    )
+
     df["Absence Rate"] = np.random.uniform(0.0, 0.1, size=n_records)
     return df
 
